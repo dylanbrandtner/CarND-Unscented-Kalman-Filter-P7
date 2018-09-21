@@ -1,9 +1,9 @@
-# Sensor Fusion: Extended Kalman Filter Project
+# Sensor Fusion: Unscented Kalman Filter Project XXXXXXXXX WORK IN PROGRESS XXXXXXXXXX
 
 [//]: # (Image References)
 [image1]: ./doc/Final.png  "Final"
 [image2]: ./KalmanFilterAlgo.png  "kalman"
-[image3]: ./Missing_normalize.png  "Normalize"
+[image3]: ./NIS_Charts.png  "NIS Charts"
 
 The overall goal of this project was to utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. 
 
