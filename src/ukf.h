@@ -66,7 +66,12 @@ public:
 
   ///* Sigma point spreading parameter
   double lambda_;
-
+  
+  ///* NIS for laser
+  double nis_laser_;
+  
+  ///* NIS for radar
+  double nis_radar_;
 
   /**
    * Constructor
@@ -77,7 +82,18 @@ public:
    * Destructor
    */
   virtual ~UKF();
+  
+  /**
+  * Generate augmented sigma points based on state and covariance 
+  */
+  MatrixXd GenerateAugmentedSigmaPoints();
 
+  /**
+  * Predict sigma points 
+  * @param delta_t Time delta
+  */
+  void SigmaPointPrediction(double delta_t);
+  
   /**
    * ProcessMeasurement
    * @param meas_package The latest measurement data of either radar or laser
@@ -102,6 +118,18 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+  
+   /**
+   * Updates the state and the state covariance matrix and NIS
+   * @param meas_package The measurement at k+1
+   * @param normalize_angles If we need to normaize the angles
+   * @param n_z Dimension of measurements
+   * @param Zsig Sigma point matrix for measurements
+   * @param R Noise covariance matrix
+   * @param nis NIS value to update
+   */
+  void UpdateHelper(MeasurementPackage meas_package, bool normalize_angles, int n_z, MatrixXd Zsig, MatrixXd R, double & nis);
+  
 };
 
 #endif /* UKF_H */

@@ -1,92 +1,70 @@
-# Unscented Kalman Filter Project Starter Code
-Self-Driving Car Engineer Nanodegree Program
+# Sensor Fusion: Extended Kalman Filter Project
 
-In this project utilize an Unscented Kalman Filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project rubric. 
+[//]: # (Image References)
+[image1]: ./doc/Final.png  "Final"
+[image2]: ./KalmanFilterAlgo.png  "kalman"
+[image3]: ./Missing_normalize.png  "Normalize"
 
-This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
+The overall goal of this project was to utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. 
 
-This repository includes two files that can be used to set up and intall [uWebSocketIO](https://github.com/uWebSockets/uWebSockets) for either Linux or Mac systems. For windows you can use either Docker, VMware, or even [Windows 10 Bash on Ubuntu](https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/) to install uWebSocketIO. Please see [this concept in the classroom](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/16cf4a78-4fc7-49e1-8621-3450ca938b77) for the required version and installation scripts.
+The kalman filter is run against a simulator to predict the motion of a car.  The simulator can be found [here](https://github.com/udacity/self-driving-car-sim/releases/). Lidar measurements are red circles and radar measurements are blue circles with an arrow pointing in the direction of the observed angle.  The path of the car is predetermined by the input data set, and the green triangles are the predicted path from the kalman filter.  Here is a snapshot of my final result:
 
-Once the install for uWebSocketIO is complete, the main program can be built and ran by doing the following from the project top directory.
+![alt text][image1]
 
-1. mkdir build
-2. cd build
-3. cmake ..
-4. make
-5. ./UnscentedKF
+## [Rubric Points](https://review.udacity.com/#!/rubrics/748/view)
+### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
-
-Note that the programs that need to be written to accomplish the project are src/ukf.cpp, src/ukf.h, tools.cpp, and tools.h
-
-The program main.cpp has already been filled out, but feel free to modify it.
-
-Here is the main protcol that main.cpp uses for uWebSocketIO in communicating with the simulator.
+### Compiling
 
 
-INPUT: values provided by the simulator to the c++ program
+The main program can be built and run by doing the following from the project top directory.
 
-["sensor_measurement"] => the measurment that the simulator observed (either lidar or radar)
+1. mkdir build && cd build
+2. cmake .. && make
+3. ./ExtendedKF
 
+### Accuracy
 
-OUTPUT: values provided by the c++ program to the simulator
+The rubric specifies the maximum RMSE values for each measurement. My final RSME values vs. the limits were as follows:
 
-["estimate_x"] <= kalman filter estimated position x
-["estimate_y"] <= kalman filter estimated position y
-["rmse_x"]
-["rmse_y"]
-["rmse_vx"]
-["rmse_vy"]
+| Measurement | Max RSME | Measured RSME  |
+|:-----------:|:--------:|:--------------:|
+|     px      |   0.09   |     0.0852     |
+|     py      |   0.10   |     0.0859     |
+|     vx      |   0.40   |     0.3166     |
+|     vy      |   0.30   |     0.2215     |
 
----
+Here's a [link to a video recording of my final result](./project_recording.mp4).
 
-## Other Important Dependencies
-* cmake >= 3.5
-  * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1 (Linux, Mac), 3.81 (Windows)
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
+### Follows the Correct Algorithm
+#### Sensor Fusion algorithm follows the general processing flow as taught in the preceding lessons
 
-## Basic Build Instructions
+The Kalman filter I implemented generally follows the flow described in the lesson materials:
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./UnscentedKF` Previous versions use i/o from text files.  The current state uses i/o
-from the simulator.
+![alt text][image2]
 
-## Editor Settings
+#### Kalman Filter algorithm handles the first measurements appropriately
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+The 'FusionEKF' class initializes all necessary matrices and initializes a 'KalmanFilter' class to store these matrices and implement Update/Predict steps.  Input measurements enter the 'ProcessMeasurement()' function in the 'FusionEKF' class.  The measurements can be either Lidar or Radar data. On the first measurement, states are initialized based on the provided data.  For Radar data, the input polar coordinates are converted to Cartesian coordinates using basic trigonometry and stored here.  
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+#### Kalman Filter algorithm first predicts then updates
 
-## Code Style
+On subsequent measurements, prediction is preformed using an updated covariance matrix and state transition matrix.  Then laser and/or radar matrices are setup, and states are updated with new measurement data. 
 
-Please stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html) as much as possible.
+#### Kalman Filter can handle radar and lidar measurements
 
-## Generating Additional Data
+Lidar measurements use standard kalman filter equations to update states within the 'Update()' function of the 'KalmanFilter' class.  Standard measurement and measurement covariance matrices are used.  
 
-This is optional!
+Radar uses _extended_ kalman filter equations to update states within the 'UpdateEKF()' function.  For this, stored state data is  first converted to polar so that it can be compared against the new measurements (which are in polar coordinates).  Also, for an _extended_ kalman filter, the measurement matrix is a Jacobian matrix calculated in the 'CalculateJacobian()' function of the 'Tools' class.
 
-If you'd like to generate your own radar and lidar data, see the
-[utilities repo](https://github.com/udacity/CarND-Mercedes-SF-Utilities) for
-Matlab scripts that can generate additional data.
+### Code Efficiency
+Algorithm does not sacrifice comprehension, stability, robustness or security for speed, while still maintaining good practice with respect to calculations.  For example, I only call angle normalization in 'UpdateEKF()' if the angle was outside expected range, and I avoid divide by zero in all cases.  I also avoided code duplication where possible.  For example, I added an 'UpdateHelper() function in the 'KalmanFilter' class to avoid duplicate update/estimation calculation code.
 
-## Project Instructions and Rubric
+## Discussion
+This project was less work intensive than previous ones as most of the framework was already setup in the sample code and in the previous lesson materials.  However, for Radar measurements in particular, there were a few details to work out that required me to understand several of the overall concepts.  For example, conversion of the polar coordinates to cartesian in the initial measurement required going back to the basic trigonometry lesson.  
 
-This information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/c3eb3583-17b2-4d83-abf7-d852ae1b9fff/concepts/f437b8b0-f2d8-43b0-9662-72ac4e4029c1)
-for instructions and the project rubric.
+One thing that tripped me up was the normalization of the bearing (aka. 'phi') in the 'y' vector (prediction vs measurement).  This was mentioned in the "Tips and tricks" for the project, but I missed it during my first implementation.  Thus, my first attempt showed the following path when the turn angle switched from left to right at the middle of the test:
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+![alt text][image3]
 
+As is clear in the image, the py value of the prediction jumps sharply and then slowly recovers.  I added some additional debugging to understand what was happening at this step.  I noticed the bearing measurement switched from negative to positive (i.e. from turning left to turning right) at this point, which caused the difference between the last and current measurement to be larger than π.  As noted in the "Tips and tricks" section, the kalman filter expects small angle value differences between -π  and π .  Thus, I normalized the bearing portion of the "y" vector using 'atan2()', such that it would remain in the expected range.  This fixed the faulty prediction here, as seen in the final video.
