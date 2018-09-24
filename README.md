@@ -3,7 +3,8 @@
 [//]: # (Image References)
 [image1]: ./doc/Final.png  "Final"
 [image2]: ./doc/KalmanFilterAlgo.png  "kalman"
-[image3]: ./UKF_Roadmap.JPG  "UKF"
+[image3]: ./doc/UKF_Roadmap.JPG  "UKF"
+[image4]: ./doc/NIS_Charts.png  "NIS"
 
 The overall goal of this project was to utilize an unscented kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. 
 
@@ -49,26 +50,26 @@ With an unscented kalman filter, the predict and update steps are bit more compl
 
 #### Kalman Filter algorithm handles the first measurements appropriately
 
-The 'FusionEKF' class initializes all necessary matrices and initializes a 'KalmanFilter' class to store these matrices and implement Update/Predict steps.  Input measurements enter the 'ProcessMeasurement()' function in the 'FusionEKF' class.  The measurements can be either Lidar or Radar data. On the first measurement, states are initialized based on the provided data.  For Radar data, the input polar coordinates are converted to Cartesian coordinates using basic trigonometry and stored here.  
+The 'UKF' class initializes all necessary matrices and variables.  Input measurements enter the 'ProcessMeasurement()' function in the 'UKF' class.  The measurements can be either Lidar or Radar data. On the first measurement, states are initialized based on the provided data.  For Radar data, the input polar coordinates are converted to Cartesian coordinates using basic trigonometry and stored here.  
 
 #### Kalman Filter algorithm first predicts then updates
 
-On subsequent measurements, prediction is preformed using an updated covariance matrix and state transition matrix.  Then laser and/or radar matrices are setup, and states are updated with new measurement data. 
+On subsequent measurements, prediction is preformed using the 'Prediction()' function of the 'UKF' class.  First, augmented sigma points are generated using the 'GenerateAugmentedSigmaPoints()' function, and then those sigma points are used to predict new sigma points in the 'SigmaPointPrediction()' function.  This information is then used to predict a new mean state and covariance matrix . 
+
+Next, the Update step is preformed using either the 'UpdateLidar()' or  'UpdateRadar()' functions of the 'UKF' class, depending on the type of input measurement. In either case, sigma points are transformed into the measurement space, a noise covariance matrix is defined, and then 'UpdateHelper()' predicts a new measurement, and sets up innovation, cross correlation, and kalman gain matrices.  Then, predicted measurements are compared against the received measurements, and  this is used to update the mean state and covariance matrix.  Additionally, the NIS (Normalized Innovation Squared) value is updated for the given measurement.  
 
 #### Kalman Filter can handle radar and lidar measurements
 
-Lidar measurements use standard kalman filter equations to update states within the 'Update()' function of the 'KalmanFilter' class.  Standard measurement and measurement covariance matrices are used.  
-
-Radar uses _extended_ kalman filter equations to update states within the 'UpdateEKF()' function.  For this, stored state data is  first converted to polar so that it can be compared against the new measurements (which are in polar coordinates).  Also, for an _extended_ kalman filter, the measurement matrix is a Jacobian matrix calculated in the 'CalculateJacobian()' function of the 'Tools' class.
+Lidar and Radar measurements are handled similarly during the update step.  The primary difference is when setting up the matrix to transform the predicted sigma points into the measurement space.  For Lidar, we simply extract px and py from the sigma points.  For Radar, we extract px, py, velocity, and yaw, and then we transform this information into range, bearing and velocity using trigonometry to match our measurement model.  Also, for Radar, we make sure to normalize all angle values to be between -π  and π throughout the update process.    
 
 ### Code Efficiency
-Algorithm does not sacrifice comprehension, stability, robustness or security for speed, while still maintaining good practice with respect to calculations.  For example, I only call angle normalization in 'UpdateEKF()' if the angle was outside expected range, and I avoid divide by zero in all cases.  I also avoided code duplication where possible.  For example, I added an 'UpdateHelper() function in the 'KalmanFilter' class to avoid duplicate update/estimation calculation code.
+Algorithm does not sacrifice comprehension, stability, robustness or security for speed, while still maintaining good practice with respect to calculations. I also avoided code duplication where possible.  I added an 'UpdateHelper() function in the 'UKF' class to avoid duplicate update calculation code.
 
 ## Discussion
-This project was less work intensive than previous ones as most of the framework was already setup in the sample code and in the previous lesson materials.  However, for Radar measurements in particular, there were a few details to work out that required me to understand several of the overall concepts.  For example, conversion of the polar coordinates to cartesian in the initial measurement required going back to the basic trigonometry lesson.  
+Again, this project was not particularly work intensive since most of the code was available in the previous lesson materials.  The only real complexity involved was updating the matrices to transform the sigma points to the measurement space for Lidar.  The rest of the Radar update code was portable enough to be reused by just removing the "angle normalization" pieces.     
 
-One thing that tripped me up was the normalization of the bearing (aka. 'phi') in the 'y' vector (prediction vs measurement).  This was mentioned in the "Tips and tricks" for the project, but I missed it during my first implementation.  Thus, my first attempt showed the following path when the turn angle switched from left to right at the middle of the test:
+The most interesting part of this project came with tuning the acceleration noise parameters.   The initial values were obviously much too high, but I wanted to use the NIS calculation to try and understand why, as the course suggested.  I calculated the NIS value for Radar and Lidar and printed them out on each update step.  I tuned the noise values a bit until the NIS started to drop off, and then I started dumping them to a CSV file so I could graph them and their associated 95% line.  In the end, using a longitudinal acceleration noise of 3 m/s^2 and a yaw acceleration noise of .5*π rad/s^2, I was able to achieve the following NIS plots:
 
-![alt text][image3]
+![alt text][image4]
 
-As is clear in the image, the py value of the prediction jumps sharply and then slowly recovers.  I added some additional debugging to understand what was happening at this step.  I noticed the bearing measurement switched from negative to positive (i.e. from turning left to turning right) at this point, which caused the difference between the last and current measurement to be larger than π.  As noted in the "Tips and tricks" section, the kalman filter expects small angle value differences between -π  and π .  Thus, I normalized the bearing portion of the "y" vector using 'atan2()', such that it would remain in the expected range.  This fixed the faulty prediction here, as seen in the final video.
+The measurements are plotted in blue, and the 95% line is drawn in red.  For Lidar, with 2 degrees of freedom, I drew the 95% line at about 5.9.  For Radar, with 3 degrees of freedom, I drew the 95% line at about 7.8. As you can see, in both plots, it appears only about 5% of the measurements are above the red line.  This, along with my favorable RSME values, gave me confidence I had chosen good noise values to create a consistent unscented kalman filter.   
