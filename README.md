@@ -1,4 +1,4 @@
-# Sensor Fusion: Unscented Kalman Filter Project XXXXXXXXX WORK IN PROGRESS XXXXXXXXXX
+# Sensor Fusion: Unscented Kalman Filter Project
 
 [//]: # (Image References)
 [image1]: ./doc/Final.png  "Final"
