@@ -35,7 +35,7 @@ The rubric specifies the maximum RMSE values for each measurement. My final RSME
 |     vx      |   0.40   |     0.3166     |
 |     vy      |   0.30   |     0.2215     |
 
-Here's a [link to a video recording of my final result](./project_recording.mp4).
+Here's a [link to a video recording of my final result](./doc/project_recording.mp4).
 
 ### Follows the Correct Algorithm
 #### Sensor Fusion algorithm follows the general processing flow as taught in the preceding lessons
