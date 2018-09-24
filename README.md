@@ -2,16 +2,16 @@
 
 [//]: # (Image References)
 [image1]: ./doc/Final.png  "Final"
-[image2]: ./KalmanFilterAlgo.png  "kalman"
-[image3]: ./NIS_Charts.png  "NIS Charts"
+[image2]: ./doc/KalmanFilterAlgo.png  "kalman"
+[image3]: ./UKF_Roadmap.JPG  "UKF"
 
-The overall goal of this project was to utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. 
+The overall goal of this project was to utilize an unscented kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. 
 
 The kalman filter is run against a simulator to predict the motion of a car.  The simulator can be found [here](https://github.com/udacity/self-driving-car-sim/releases/). Lidar measurements are red circles and radar measurements are blue circles with an arrow pointing in the direction of the observed angle.  The path of the car is predetermined by the input data set, and the green triangles are the predicted path from the kalman filter.  Here is a snapshot of my final result:
 
 ![alt text][image1]
 
-## [Rubric Points](https://review.udacity.com/#!/rubrics/748/view)
+## [Rubric Points](https://review.udacity.com/#!/rubrics/783/view)
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
 ### Compiling
@@ -21,7 +21,7 @@ The main program can be built and run by doing the following from the project to
 
 1. mkdir build && cd build
 2. cmake .. && make
-3. ./ExtendedKF
+3. ./UnscentedKF
 
 ### Accuracy
 
@@ -42,6 +42,10 @@ Here's a [link to a video recording of my final result](./project_recording.mp4)
 The Kalman filter I implemented generally follows the flow described in the lesson materials:
 
 ![alt text][image2]
+
+With an unscented kalman filter, the predict and update steps are bit more complex, as described in the diagram below:
+
+![alt text][image3]
 
 #### Kalman Filter algorithm handles the first measurements appropriately
 
